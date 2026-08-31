@@ -1,23 +1,33 @@
 name: build & deploy
-on:
+on: 
   push:
     branches:
       - main
-      - feature/**
-
+      - 'releases/**'
+  pull_request:
+    branches: 
+    - main
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Build the Docker image
+  docker-build:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: build docker image
         run: docker build -t calculator .
-      - name: Run the Docker container
-        run: docker run -dt --name web_calculator -p 8080:8080 calculator:latest
-      - name: Container List
+      - name: run the conatiner
+        run: docker run --name web_cal -p 8080:8080 calculator:latest
+      - name : conatiner list
         run: docker ps -a
-      - name: Check Application Health
+  health-check:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: check application health
         run: |
           echo "Waiting for the application to start..."
           sleep 3
@@ -30,19 +40,16 @@ jobs:
             docker logs web_calculator
             exit 1
           fi
-
-  success_deployment:
-    needs: build
-    if: success()
+  suceess-msg:
+    needs: health-check
     runs-on: ubuntu-latest
     steps:
-      - name: Application Deployment Success
-        run: echo "Application deployed successfully"
-
-  failure_deployment:
-    needs: build
-    if: failure()
+      - name: viewing the sucess of deployment
+        run: echo "Application deployed successfully""
+  fail-msg:
+    needs: [build-test,docker-build,health-check]
     runs-on: ubuntu-latest
     steps:
       - name: Application Deployment Failure
         run: echo "Application deployment failed"
+    
