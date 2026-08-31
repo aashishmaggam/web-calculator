@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: build docker image
-        run: docker build -t calculator .
+        run: docker build -t calculator -f path/to/Dockerfile .
       - name: run the conatiner
         run: docker run --name web_cal -p 8080:8080 calculator:latest
       - name : conatiner list
