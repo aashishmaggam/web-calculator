@@ -1,0 +1,35 @@
+name: web-calculator
+on: 
+  push:
+    branches:
+      - main
+      - feature/**
+jobs:
+  build:
+    if: startsWith(github.ref_name,'feature/dockerfile') && github.event_name == 'push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      run: docker build -t calculator .
+    - name: Run the Docker container
+      run : docker run -dt --name web_calculator -p 8080:8080 calculator:latest
+    - name: Container List
+      run: docker ps -a
+    - name: Check application Health 
+      run: |
+          echo "Waiting for the application to start..."
+          sleep 3
+          
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080)
+          
+          echo "Application responded with HTTP status code: $STATUS_CODE"
+          
+          if [ "$STATUS_CODE" -eq 200 ]; then
+            echo "Success! The calculator application is up and running."
+          else
+            echo "Error: Application health check failed! Container logs:"
+            docker logs web_calculator
+            exit 1
+      
+
