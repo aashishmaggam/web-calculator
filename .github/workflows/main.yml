@@ -1,35 +1,28 @@
-name: web-calculator
+name: build & deploy
+on:
+  push:
+    branches:
+      - main
+      - feature/**
 
-on: workflow_dispatch
 jobs:
   build:
-    # Run only for pushes to feature/dockerfile* branches
-    if: ${{ github.event_name == 'push' && startsWith(github.ref_name, 'feature/dockerfile') }}
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Build Docker image
-        run: docker build -t calculator:latest .
-
+      - name: Build the Docker image
+        run: docker build -t calculator .
       - name: Run the Docker container
-        run: docker run -d --name web_calculator -p 8080:8080 calculator:latest
-
+        run: docker run -dt --name web_calculator -p 8080:8080 calculator:latest
       - name: Container List
         run: docker ps -a
-
-      - name: Check application health
+      - name: Check Application Health
         run: |
-          set -e
           echo "Waiting for the application to start..."
-          sleep 5
-
-          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 || true)
-
+          sleep 3
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080)
           echo "Application responded with HTTP status code: $STATUS_CODE"
-
           if [ "$STATUS_CODE" -eq 200 ]; then
             echo "Success! The calculator application is up and running."
           else
@@ -38,6 +31,18 @@ jobs:
             exit 1
           fi
 
-      - name: Cleanup
-        if: always()
-        run: docker rm -f web_calculator || true
+  success_deployment:
+    needs: build
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Application Deployment Success
+        run: echo "Application deployed successfully"
+
+  failure_deployment:
+    needs: build
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Application Deployment Failure
+        run: echo "Application deployment failed"
