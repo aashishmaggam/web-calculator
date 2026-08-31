@@ -52,4 +52,12 @@ jobs:
     steps:
       - name: Application Deployment Failure
         run: echo "Application deployment failed"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Debug - list files
+        run: |
+          pwd
+          ls -la
+          find . -iname "dockerfile*"
     
