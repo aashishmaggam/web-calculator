@@ -1,11 +1,6 @@
 name: web-calculator
 
-on:
-  push:
-    branches:
-      - main
-      - 'feature/**'
-
+on: workflow_dispatch
 jobs:
   build:
     # Run only for pushes to feature/dockerfile* branches
